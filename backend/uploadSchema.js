@@ -1,6 +1,5 @@
 require('dotenv').config();
 const fs = require('fs');
-const path = require('path');
 const { Pool } = require('pg');
 
 // Create PostgreSQL pool connection
@@ -14,27 +13,26 @@ const pool = new Pool({
 
 // Function to read and execute the schema file
 const uploadSchema = async () => {
-    const schemaPath = path.resolve(__dirname, 'schema.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
-    const queries = schema.split(';').map(query => query.trim()).filter(query => query.length > 0);
-
-    const client = await pool.connect();
     try {
-        await client.query('BEGIN');  // Start a transaction
+        // Read the SQL schema from the file
+        const schema = fs.readFileSync('schema.sql', 'utf8');
+        
+        // Split the schema by semicolon to execute each statement
+        const queries = schema.split(';').map(query => query.trim()).filter(query => query.length > 0);
 
+        // Execute each query sequentially
         for (let query of queries) {
             console.log(`Executing: ${query}`);
-            await client.query(query);
+            await pool.query(query);
         }
 
-        await client.query('COMMIT');  // Commit the transaction
         console.log('Schema uploaded successfully!');
     } catch (err) {
-        await client.query('ROLLBACK');  // Rollback in case of error
+        // Log the error with full details
         console.error('Error executing schema:', err);
-        console.error('Error Stack:', err.stack);
+        console.error('Error Stack:', err.stack);  // This will show the complete stack trace
     } finally {
-        client.release();  // Release the client back to the pool
+        pool.end();  // Close the connection
     }
 };
 
