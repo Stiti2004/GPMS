@@ -1,20 +1,20 @@
 const jwt = require('jsonwebtoken');
 
-// Protect routes for authenticated users only
+// Protect routes by verifying JWT token
 const protect = (req, res, next) => {
     const token = req.header('Authorization');
     if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;  // Attach decoded user info to request
+        req.user = decoded;  // Attach user information to the request object
         next();
     } catch (error) {
         res.status(401).json({ message: 'Token is not valid' });
     }
 };
 
-// Authorize user roles (for example, only government monitors can access certain routes)
+// Authorize roles for specific routes
 const authorizeRole = (role) => {
     return (req, res, next) => {
         if (req.user.role !== role) {

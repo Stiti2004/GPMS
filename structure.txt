@@ -1,0 +1,24 @@
+/backend
+  ├── /controllers
+  │    └── authController.js           # Handles user authentication and registration
+  │    └── userController.js           # Handles user-related actions (viewing data, modifying data)
+  │    └── reportController.js        # Handles report generation for government monitors
+  │    └── panchayatController.js     # Handles actions for Panchayat employees
+  │    └── citizenController.js       # Handles actions for citizens
+  ├── /models
+  │    └── userModel.js               # Contains functions to interact with user-related data (DB queries)
+  │    └── panchayatModel.js          # Contains functions to interact with Panchayat data
+  │    └── citizenModel.js            # Contains functions to interact with citizen-related data
+  │    └── reportModel.js             # Contains functions to generate reports
+  ├── /routes
+  │    └── authRoutes.js              # Routes for user authentication (login, registration)
+  │    └── userRoutes.js              # Routes for user actions (viewing data, modifying data)
+  │    └── panchayatRoutes.js         # Routes for Panchayat employees to modify and view data
+  │    └── citizenRoutes.js           # Routes for citizens to view data
+  │    └── reportRoutes.js            # Routes for government monitors to access reports
+  ├── db.js                           # Database connection setup (using Pool or Client)
+  ├── server.js                       # Entry point for your Node.js server
+  ├── .env                            # Environment variables (e.g., database credentials, JWT secret)
+  ├── package.json                    # Project dependencies
+  ├── package-lock.json               # Lock file for consistent dependency versions
+  ├── node_modules                    # Installed dependencies
