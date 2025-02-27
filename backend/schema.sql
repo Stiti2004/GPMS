@@ -1,3 +1,9 @@
+CREATE TABLE households (
+    household_id INT PRIMARY KEY,
+    address TEXT,
+    income DECIMAL(10,2)
+);
+
 CREATE TABLE citizens (
     citizen_id INT PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
@@ -11,11 +17,6 @@ CREATE TABLE citizens (
     FOREIGN KEY (household_id) REFERENCES households(household_id)
 );
 
-CREATE TABLE households (
-    household_id INT PRIMARY KEY,
-    address TEXT,
-    income DECIMAL(10,2)
-);
 
 CREATE TABLE land_records (
     land_id INT PRIMARY KEY,
@@ -23,6 +24,12 @@ CREATE TABLE land_records (
     area_acres DECIMAL(10,2),
     crop_type VARCHAR(255),
     FOREIGN KEY (citizen_id) REFERENCES citizens(citizen_id)
+);
+CREATE TABLE welfare_schemes (
+    scheme_id INT PRIMARY KEY,
+    scheme_name VARCHAR(255),
+    beneficiaries TEXT,
+    budget DECIMAL(15,2)
 );
 
 CREATE TABLE scheme_enrollments (
@@ -34,12 +41,7 @@ CREATE TABLE scheme_enrollments (
     FOREIGN KEY (scheme_id) REFERENCES welfare_schemes(scheme_id)
 );
 
-CREATE TABLE welfare_schemes (
-    scheme_id INT PRIMARY KEY,
-    scheme_name VARCHAR(255),
-    beneficiaries TEXT,
-    budget DECIMAL(15,2)
-);
+
 
 CREATE TABLE educational_schemes (
     scheme_id INT PRIMARY KEY,
@@ -187,8 +189,7 @@ CREATE TABLE tax_collections (
 
 CREATE TABLE scheme_maintenance (
     maintenance_id INT PRIMARY KEY,
-    sc
-heme_id INT,
+    scheme_id INT,
     maintained_by INT,
     FOREIGN KEY (scheme_id) REFERENCES welfare_schemes(scheme_id),
     FOREIGN KEY (maintained_by) REFERENCES panchayat_committee_members(member_id)
