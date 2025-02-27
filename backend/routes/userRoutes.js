@@ -1,13 +1,10 @@
 const express = require('express');
-const { registerCitizenController, getCitizenProfileController } = require('../controllers/userController');
-const { protect } = require('../middleware/authMiddleware'); // Protect routes with JWT
-
+const { viewProfile, modifyCitizenData } = require('../controllers/userController');
+const { protect } = require('../middleware/authMiddleware'); // Protect routes
 const router = express.Router();
 
-// Route to register a new citizen
-router.post('/register', registerCitizenController);
-
-// Route to get citizen profile (protected route)
-router.get('/profile/:id', protect, getCitizenProfileController);
+// Protect routes with authentication
+router.get('/profile', protect, viewProfile);
+router.put('/modifyCitizenData', protect, modifyCitizenData);
 
 module.exports = router;

@@ -1,27 +1,25 @@
-const { registerCitizen, getCitizenById } = require('../models/userModel');
+const { getUserById } = require('../models/userModel');
+const { getCitizenInfo, modifyCitizenInfo } = require('../models/citizenModel');
 
-// Register a new citizen (creating a new user)
-const registerCitizenController = async (req, res) => {
-    const { username, password, name, gender, dob, household_id, educational_qualification, role } = req.body;
+// View user profile
+const viewProfile = async (req, res) => {
     try {
-        const newCitizen = await registerCitizen({
-            username, password, name, gender, dob, household_id, educational_qualification, role
-        });
-        res.status(201).json({ citizen_id: newCitizen.citizen_id });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+        const user = await getUserById(req.user.userId);
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 };
 
-// Get citizen details by ID (used for profile)
-const getCitizenProfileController = async (req, res) => {
-    const citizenId = req.params.id;
+// Modify citizen data (for Panchayat employees)
+const modifyCitizenData = async (req, res) => {
     try {
-        const citizen = await getCitizenById(citizenId);
-        res.status(200).json(citizen);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+        const { citizenId, newData } = req.body;
+        const updatedCitizen = await modifyCitizenInfo(citizenId, newData);
+        res.status(200).json(updatedCitizen);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 };
 
-module.exports = { registerCitizenController, getCitizenProfileController };
+module.exports = { viewProfile, modifyCitizenData };
