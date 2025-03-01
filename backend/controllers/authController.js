@@ -1,32 +1,269 @@
-const bcrypt = require('bcrypt');
+const db = require('../db');
 const jwt = require('jsonwebtoken');
-const { createUser, getUserByUsername } = require('../models/userModel');
+const bcrypt = require('bcrypt');
 
-// User registration
-const registerUser = async (req, res) => {
-    const { username, password, role } = req.body;
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await createUser(username, hashedPassword, role);
-        res.status(201).json({ message: 'User registered successfully', user });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+// Helper function to generate JWT token
+const generateToken = (user) => {
+  return jwt.sign(
+    { id: user.id, username: user.username, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '24h' }
+  );
 };
 
-// User login
-const loginUser = async (req, res) => {
+// Hash password before storing
+const hashPassword = async (password) => {
+  const salt = await bcrypt.genSalt(10);
+  return await bcrypt.hash(password, salt);
+};
+
+// Login controller
+exports.login = async (req, res) => {
+  try {
+    const { role, username, password } = req.body;
+    
+    let user;
+    let tableName;
+    let idField;
+    
+    // Determine which table to query based on role
+    switch (role) {
+      case 'citizen':
+        tableName = 'citizens';
+        idField = 'citizen_id';
+        break;
+      case 'panchayatMember':
+        tableName = 'panchayat_committee_members';
+        idField = 'member_id';
+        break;
+      case 'admin':
+        tableName = 'system_administrators';
+        idField = 'username';
+        break;
+      case 'monitor':
+        tableName = 'government_monitors';
+        idField = 'username';
+        break;
+      default:
+        return res.status(400).json({ message: 'Invalid role specified' });
+    }
+    
+    // Query the appropriate table
+    const result = await db.query(
+      `SELECT * FROM ${tableName} WHERE username = $1`,
+      [username]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    
+    user = result.rows[0];
+    
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    
+    // Create token with role information
+    const token = generateToken({
+      id: user[idField],
+      username: user.username,
+      role: role
+    });
+    
+    res.status(200).json({
+      token,
+      role,
+      username: user.username,
+      redirectUrl: `/${role}HomePage`
+    });
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during login' });
+  }
+};
+
+// Get register page controller
+exports.getRegisterPage = (req, res) => {
+  res.json({
+    roles: ['citizen', 'panchayatMember', 'admin', 'monitor'],
+    message: 'Please select a role to register'
+  });
+};
+
+// Register citizen controller
+exports.registerCitizen = async (req, res) => {
+  try {
+    const { 
+      name, gender, dob, household_id, educational_qualification, 
+      username, password 
+    } = req.body;
+    
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+    
+    // Check if username already exists
+    const userCheck = await db.query(
+      'SELECT * FROM citizens WHERE username = $1',
+      [username]
+    );
+    
+    if (userCheck.rows.length > 0) {
+      return res.status(400).json({ message: 'Username already exists' });
+    }
+    
+    // Insert new citizen
+    const result = await db.query(
+      `INSERT INTO citizens 
+       (name, gender, dob, household_id, educational_qualification, username, password, role) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+       RETURNING citizen_id, username`,
+      [name, gender, dob, household_id, educational_qualification, username, hashedPassword, 'citizen']
+    );
+    
+    res.status(201).json({
+      message: 'Citizen registered successfully',
+      redirectUrl: '/login'
+    });
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during registration' });
+  }
+};
+
+// Register panchayat member as citizen controller
+exports.registerPanchayatMemberAsCitizen = async (req, res) => {
+  try {
+    // First register as citizen
+    await exports.registerCitizen(req, res);
+    // Redirect to panchayat member registration
+    res.json({
+      message: 'Citizen registered successfully. Please complete panchayat member registration.',
+      redirectUrl: '/register/panchayatMember/member',
+      citizenId: req.body.citizen_id
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during registration' });
+  }
+};
+
+// Register panchayat member controller
+exports.registerPanchayatMember = async (req, res) => {
+  try {
+    const { 
+      citizen_id, first_name, last_name, role, contact_number,
+      term_start_date, term_end_date, username, password 
+    } = req.body;
+    
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+    
+    // Check if username already exists
+    const userCheck = await db.query(
+      'SELECT * FROM panchayat_committee_members WHERE username = $1',
+      [username]
+    );
+    
+    if (userCheck.rows.length > 0) {
+      return res.status(400).json({ message: 'Username already exists' });
+    }
+    
+    // Insert new panchayat member
+    const result = await db.query(
+      `INSERT INTO panchayat_committee_members 
+       (citizen_id, first_name, last_name, role, contact_number, term_start_date, term_end_date, username, password) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+       RETURNING member_id, username`,
+      [citizen_id, first_name, last_name, role, contact_number, term_start_date, term_end_date, username, hashedPassword]
+    );
+    
+    res.status(201).json({
+      message: 'Panchayat member registered successfully',
+      redirectUrl: '/login'
+    });
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during registration' });
+  }
+};
+
+// Register admin controller
+exports.registerAdmin = async (req, res) => {
+  try {
     const { username, password } = req.body;
-    try {
-        const user = await getUserByUsername(username);
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-        const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.status(200).json({ message: 'Login successful', token });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+    
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+    
+    // Check if username already exists
+    const userCheck = await db.query(
+      'SELECT * FROM system_administrators WHERE username = $1',
+      [username]
+    );
+    
+    if (userCheck.rows.length > 0) {
+      return res.status(400).json({ message: 'Username already exists' });
     }
+    
+    // Insert new admin
+    const result = await db.query(
+      `INSERT INTO system_administrators (username, password) 
+       VALUES ($1, $2) 
+       RETURNING username`,
+      [username, hashedPassword]
+    );
+    
+    res.status(201).json({
+      message: 'Administrator registered successfully',
+      redirectUrl: '/login'
+    });
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during registration' });
+  }
 };
 
-module.exports = { registerUser, loginUser };
+// Register monitor controller
+exports.registerMonitor = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+    
+    // Check if username already exists
+    const userCheck = await db.query(
+      'SELECT * FROM government_monitors WHERE username = $1',
+      [username]
+    );
+    
+    if (userCheck.rows.length > 0) {
+      return res.status(400).json({ message: 'Username already exists' });
+    }
+    
+    // Insert new monitor
+    const result = await db.query(
+      `INSERT INTO government_monitors (username, password) 
+       VALUES ($1, $2) 
+       RETURNING username`,
+      [username, hashedPassword]
+    );
+    
+    res.status(201).json({
+      message: 'Government monitor registered successfully',
+      redirectUrl: '/login'
+    });
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during registration' });
+  }
+};

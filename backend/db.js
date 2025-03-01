@@ -1,13 +1,23 @@
-require('dotenv').config();  // Load environment variables from .env file
 const { Pool } = require('pg');
+require('dotenv').config();
 
-// Create a new pool connection using environment variables
 const pool = new Pool({
-    user: process.env.DATABASE_USER,        // From .env
-    host: process.env.DATABASE_HOST,        // From .env
-    database: process.env.DATABASE_NAME,    // From .env
-    password: process.env.DATABASE_PASSWORD, // From .env
-    port: process.env.DATABASE_PORT,        // From .env
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT || 5432,
 });
 
-module.exports = pool;
+pool.on('connect', () => {
+  console.log('Connected to the database');
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
+
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+};
