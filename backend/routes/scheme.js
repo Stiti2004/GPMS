@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const panchayatController = require('../controllers/panchayatController');
-const { verifyToken, authorizeRoles } = require('../middleware/auth');
+const { verifyToken, authorizeRoles } = require('../middleware/authMiddleware');
 
 // Apply auth middleware to all routes
 router.use(verifyToken);

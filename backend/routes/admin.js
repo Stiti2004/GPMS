@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
-const { verifyToken, authorizeRoles } = require('../middleware/auth');
+const { verifyToken, authorizeRoles } = require('../middleware/authMiddleware');
 
 // Apply auth middleware to all routes
 router.use(verifyToken);
 router.use(authorizeRoles('admin'));
 
 // Get admin homepage
-//router.get('/home', adminController.getHomePage);
+router.get('/home', adminController.getHomePage);
 
 // Manage panchayat members
 router.get('/panchayat-members', adminController.getAllPanchayatMembers);
