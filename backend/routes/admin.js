@@ -8,7 +8,7 @@ router.use(verifyToken);
 router.use(authorizeRoles('admin'));
 
 // Get admin homepage
-router.get('/home', adminController.getHomePage);
+//router.get('/home', adminController.getHomePage);
 
 // Manage panchayat members
 router.get('/panchayat-members', adminController.getAllPanchayatMembers);
