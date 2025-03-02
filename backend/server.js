@@ -9,7 +9,7 @@ const citizenRoutes = require('./routes/citizen');
 const panchayatRoutes = require('./routes/panchayat');
 const adminRoutes = require('./routes/admin');
 const monitorRoutes = require('./routes/monitor');
-const schemeRoutes = require('./routes/schemes');
+const schemeRoutes = require('./routes/scheme');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,7 +25,7 @@ app.use('/api/citizens', citizenRoutes);
 app.use('/api/panchayat', panchayatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/monitor', monitorRoutes);
-app.use('/api/schemes', schemeRoutes);
+app.use('/api/scheme', schemeRoutes);
 
 // Home route
 app.get('/home', (req, res) => {
