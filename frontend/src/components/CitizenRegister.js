@@ -150,7 +150,7 @@ const handleChange = (e) => {
       
 
     const handleRegister = async () => {
-        if (!formData.username || !formData.password || !formData.fullName || !formData.gender || !formData.dob || !formData.householdId || !formData.education || !formData.occupation) {
+        if (!formData.username || !formData.password || !formData.fullName || !formData.gender || !formData.dob || !formData.address || !formData.income || !formData.education || !formData.occupation) {
             setError('Please fill in all required fields.');
             return;
         }
