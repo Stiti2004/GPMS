@@ -22,11 +22,13 @@ const hashPassword = async (password) => {
 exports.login = async (req, res) => {
   try {
     const { role, username, password } = req.body;
-    
+
+    console.log("🟢 Login Attempt:", { username, role }); // ✅ Log request
+
     let user;
     let tableName;
     let idField;
-    
+
     // 🔍 **Determine which table to query based on role**
     switch (role) {
       case 'citizen':
@@ -46,47 +48,56 @@ exports.login = async (req, res) => {
         idField = 'username';
         break;
       default:
+        console.error("❌ Invalid role:", role);
         return res.status(400).json({ message: 'Invalid role specified' });
     }
-    
+
+    console.log(`🔍 Searching in Table: ${tableName} for Username: ${username}`);
+
     // 🔍 **Query the appropriate table**
-    const result = await db.query(
-      `SELECT * FROM ${tableName} WHERE username = $1`,
-      [username]
-    );
-    
+    const result = await db.query(`SELECT * FROM ${tableName} WHERE username = $1`, [username]);
+
     if (result.rows.length === 0) {
+      console.warn("⚠️ User not found:", username);
       return res.status(401).json({ message: 'Invalid username or role' });
     }
-    
+
     user = result.rows[0];
-    
+
+    console.log("🟢 User found:", user);
+
     // 🔐 **Verify password**
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    
+
     if (!isPasswordValid) {
+      console.warn("⚠️ Incorrect password for:", username);
       return res.status(401).json({ message: 'Invalid password' });
     }
-    
-    // ✅ **Create JWT Token**
-    const token = generateToken({
-      id: user[idField],
-      username: user.username,
-      role: role
-    });
-    
+
+    console.log("✅ Password verified for:", username);
+
+    // 🎫 **Create JWT Token**
+    const token = jwt.sign(
+      { id: user[idField], username: user.username, role: role },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    console.log("✅ Token generated for:", username);
+
     res.status(200).json({
       token,
       role,
       username: user.username,
       redirectUrl: `/login/${role}`
     });
-    
+
   } catch (error) {
-    console.error('❌ Error during login:', error);
+    console.error("❌ Server error during login:", error);
     res.status(500).json({ message: 'Server error during login' });
   }
 };
+
 
 // Get register page controller
 exports.getRegisterPage = (req, res) => {
