@@ -11,3 +11,32 @@ sudo su - postgres
  exit
 
  
+
+
+t=> INSERT INTO households (household_id, address, income) 
+gram_panchayat-> VALUES (1, '123 Main Street, Village A', 50000.00);
+INSERT 0 1
+gram_panchayat=> INSERT INTO citizens (citizen_id, username, password, name, gender, dob, household_id, educational_qualification, role)
+gram_panchayat-> VALUES (1, 'johndoe', '$2b$10$RANDOM_HASHED_STRING_HERE', 'John Doe', 'Male', '1990-05-15', 1, 'B.Sc Agriculture', 'citizen');
+INSERT 0 1
+gram_panchayat=> SELECT * FROM households;
+ household_id |          address           |  income  
+--------------+----------------------------+----------
+            1 | 123 Main Street, Village A | 50000.00
+(1 row)
+
+gram_panchayat=> SELECT * FROM citizens;
+gram_panchayat=> SELECT * FROM households;
+ household_id |          address           |  income  
+--------------+----------------------------+----------
+            1 | 123 Main Street, Village A | 50000.00
+(1 row)
+
+gram_panchayat=> q
+gram_panchayat-> ^C
+gram_panchayat=> \q
+@calmcreek ➜ /workspaces/GPMS (main) $ curl -X POST http://localhost:5000/api/auth/login      -H "Content-Type: application/json"      -d '{
+>        "username": "johndoe",
+>        "password": "password123",
+>        "role": "citizen"
+>      }'
