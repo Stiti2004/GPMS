@@ -18,6 +18,7 @@ const hashPassword = async (password) => {
 };
 
 // Login controller
+// 📌 **Login Controller**
 exports.login = async (req, res) => {
   try {
     const { role, username, password } = req.body;
@@ -26,21 +27,21 @@ exports.login = async (req, res) => {
     let tableName;
     let idField;
     
-    // Determine which table to query based on role
+    // 🔍 **Determine which table to query based on role**
     switch (role) {
       case 'citizen':
         tableName = 'citizens';
         idField = 'citizen_id';
         break;
-      case 'panchayatMember':
+      case 'employee':
         tableName = 'panchayat_committee_members';
         idField = 'member_id';
         break;
-      case 'admin':
+      case 'administrator':
         tableName = 'system_administrators';
         idField = 'username';
         break;
-      case 'monitor':
+      case 'government_monitor':
         tableName = 'government_monitors';
         idField = 'username';
         break;
@@ -48,26 +49,26 @@ exports.login = async (req, res) => {
         return res.status(400).json({ message: 'Invalid role specified' });
     }
     
-    // Query the appropriate table
+    // 🔍 **Query the appropriate table**
     const result = await db.query(
       `SELECT * FROM ${tableName} WHERE username = $1`,
       [username]
     );
     
     if (result.rows.length === 0) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid username or role' });
     }
     
     user = result.rows[0];
     
-    // Verify password
+    // 🔐 **Verify password**
     const isPasswordValid = await bcrypt.compare(password, user.password);
     
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid password' });
     }
     
-    // Create token with role information
+    // ✅ **Create JWT Token**
     const token = generateToken({
       id: user[idField],
       username: user.username,
@@ -78,11 +79,11 @@ exports.login = async (req, res) => {
       token,
       role,
       username: user.username,
-      redirectUrl: `/${role}HomePage`
+      redirectUrl: `/login/${role}`
     });
     
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error during login:', error);
     res.status(500).json({ message: 'Server error during login' });
   }
 };

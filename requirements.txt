@@ -1,0 +1,13 @@
+sudo apt update && sudo apt install -y postgresql postgresql-client
+sudo service postgresql start
+ps aux | grep postgres 
+sudo su - postgres
+ psql
+  CREATE DATABASE gram_panchayat;
+  CREATE USER myuser WITH ENCRYPTED PASSWORD 'mypassword';
+  GRANT ALL PRIVILEGES ON DATABASE gram_panchayat TO myuser;
+ 
+   \q
+ exit
+
+ 
