@@ -5,8 +5,12 @@ const authController = require('../controllers/authController');
 // Login route
 router.post('/login', authController.login);
 
+
+router.get('/register', authController.getRegisterPage);
 // Route to get the registration page based on role
-router.get('/register/:role', (req, res) => {
+router.post('/register/:role', (req, res) => {
+    console.log(req);
+    console.log("sdifjk");
     const role = req.params.role;
 
     if (role === 'panchayatMember') {

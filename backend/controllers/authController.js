@@ -11,8 +11,12 @@ const generateToken = (user) => {
   );
 };
 
+
 // Hash password before storing
 const hashPassword = async (password) => {
+  if (!password) {
+    throw new Error("Password is required for hashing");
+  }
   const salt = await bcrypt.genSalt(10);
   return await bcrypt.hash(password, salt);
 };
@@ -108,40 +112,61 @@ exports.getRegisterPage = (req, res) => {
 };
 
 // Register citizen controller
+// Register citizen controller
 exports.registerCitizen = async (req, res) => {
+  console.log(req);
   try {
     const { 
       name, gender, dob, household_id, educational_qualification, 
       username, password 
     } = req.body;
-    
+
+    console.log(name, gender, dob, household_id, educational_qualification, 
+      username, password );
+
+    // Validate required fields
+    if (!username || !password || !name || !gender || !dob || !household_id || !educational_qualification) {
+      return res.status(400).json({ message: 'All fields are required.' });
+    }
+
+    // Validate date of birth
+    const today = new Date().toISOString().split('T')[0];
+    if (dob > today) {
+      return res.status(400).json({ message: 'Date of birth cannot be in the future.' });
+    }
+
+    // Validate income
+    /* if (isNaN(income) || income < 0) {
+      return res.status(400).json({ message: 'Income must be a valid positive number.' });
+    } */
+
     // Hash password
     const hashedPassword = await hashPassword(password);
-    
+
     // Check if username already exists
     const userCheck = await db.query(
-      'SELECT * FROM citizens WHERE username = $1',
-      [username]
+      'SELECT * FROM citizens WHERE username = %s',
+      (username)
     );
-    
+
     if (userCheck.rows.length > 0) {
       return res.status(400).json({ message: 'Username already exists' });
     }
-    
+
     // Insert new citizen
     const result = await db.query(
       `INSERT INTO citizens 
-       (name, gender, dob, household_id, educational_qualification, username, password, role) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+       (name, gender, dob, household_id, educational_qualification, username, password, occupation, income, role) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
        RETURNING citizen_id, username`,
       [name, gender, dob, household_id, educational_qualification, username, hashedPassword, 'citizen']
     );
-    
+
     res.status(201).json({
       message: 'Citizen registered successfully',
       redirectUrl: '/login'
     });
-    
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error during registration' });
