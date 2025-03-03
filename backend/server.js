@@ -19,6 +19,12 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+const corsOptions = {
+  origin: 'http://localhost:3000', // React app's URL
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
 // Route middleware
 app.use('/api/auth', authRoutes);
 app.use('/api/citizens', citizenRoutes);
