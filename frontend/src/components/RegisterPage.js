@@ -11,11 +11,12 @@ export default function RegisterPage() {
     const [isCitizenRegistered, setIsCitizenRegistered] = useState(null);
    
     const handleRoleSelection = async (selectedRole) => {
+        console.log(selectedRole);
         if (selectedRole === 'employee') {
             setRole(selectedRole);
         } else {
             try {
-                const response = await fetch(`http://localhost:5000/api/auth/register/${selectedRole}`);
+                const response = await fetch(`http://localhost:5000/api/auth/register`);
                 if (response.ok) {
                     navigate(`/register/${selectedRole}`);
                 } else {

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -33,9 +34,9 @@ export default function CitizenRegister() {
             setError('Date of birth cannot be in the future.');
             return;
         }
-
+        console.log(JSON.stringify(formData));
         try {
-            const response = await fetch('/api/register/citizen', {
+            const response = await fetch('http://localhost:5000/api/auth/register/citizen', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -51,6 +52,7 @@ export default function CitizenRegister() {
             navigate('/login');
         } catch (error) {
             setError('Error connecting to server. Please try again later.');
+            console.log(error);
         }
     };
 
@@ -100,6 +102,7 @@ const loginLinkStyle = {
 const titleStyle = {
     color: '#00509d', fontWeight: 'bold', marginBottom: '15px'
 };
+
 
 /*
 
