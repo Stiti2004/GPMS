@@ -10,22 +10,31 @@ export default function RegisterPage() {
     const [role, setRole] = useState('');
     const [isCitizenRegistered, setIsCitizenRegistered] = useState(null);
    
-    const handleRoleSelection = (selectedRole) => {
+    const handleRoleSelection = async (selectedRole) => {
         if (selectedRole === 'employee') {
             setRole(selectedRole);
         } else {
-            navigate(`/register/${selectedRole}`);
+            try {
+                const response = await fetch(`http://localhost:5000/api/auth/register/${selectedRole}`);
+                if (response.ok) {
+                    navigate(`/register/${selectedRole}`);
+                } else {
+                    console.error('Failed to fetch registration page.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
         }
-    };
+    };    
 
-    const handleCitizenRegistrationCheck = (answer) => {
+    const handleCitizenRegistrationCheck = async (answer) => {
         setIsCitizenRegistered(answer);
         if (answer === 'yes') {
             navigate('/register/employee');
         } else {
             navigate('/register/citizen', { state: { redirectTo: '/register/employee' } });
         }
-    };
+    };    
 
     React.useEffect(() => {
         if (location.state?.redirectTo) {
